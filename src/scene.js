@@ -44,14 +44,11 @@ export const setupScene = () => {
 	const pmremGenerator = new PMREMGenerator(renderer);
 	pmremGenerator.compileEquirectangularShader();
 
-	new EXRLoader().load(
-		'https://storage.googleapis.com/donmccurdy-static/venice_sunset_1k.exr',
-		(texture) => {
-			const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-			pmremGenerator.dispose();
-			scene.environment = envMap;
-		},
-	);
+	new EXRLoader().load('assets/venice_sunset_1k.exr', (texture) => {
+		const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+		pmremGenerator.dispose();
+		scene.environment = envMap;
+	});
 
 	new GLTFLoader().load('assets/flappybird.glb', (gltf) => {
 		scene.add(gltf.scene);
