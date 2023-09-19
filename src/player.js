@@ -38,11 +38,7 @@ export class PlayerSystem extends System {
 		playerSpace.add(camera);
 
 		for (let i = 0; i < 2; i++) {
-			// const controllerModelFactory = new XRControllerModelFactory();
 			const controllerGrip = renderer.xr.getControllerGrip(i);
-			// controllerGrip.add(
-			// 	controllerModelFactory.createControllerModel(controllerGrip),
-			// );
 			scene.add(controllerGrip);
 			const targetRaySpace = renderer.xr.getController(i);
 			targetRaySpace.addEventListener('connected', async function (event) {

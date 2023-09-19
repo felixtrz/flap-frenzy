@@ -9,6 +9,7 @@ import './styles/index.css';
 
 import { PlayerComponent, PlayerSystem } from './player';
 
+import { FlapSystem } from './flap';
 import { GameSystem } from './game';
 import { GlobalComponent } from './global';
 import { InlineSystem } from './landing';
@@ -21,6 +22,7 @@ const worldDef = {
 		PlayerComponent,
 		PlayerSystem,
 		InlineSystem,
+		FlapSystem,
 		GameSystem,
 	],
 };
