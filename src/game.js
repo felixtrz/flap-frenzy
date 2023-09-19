@@ -1,13 +1,29 @@
+import {
+	Group,
+	Mesh,
+	MeshBasicMaterial,
+	PlaneGeometry,
+	SRGBColorSpace,
+	TextureLoader,
+} from 'three';
+
 import { FlapSystem } from './flap';
 import { GlobalComponent } from './global';
-import { Group } from 'three';
 import { PlayerComponent } from './player';
 import { System } from '@lastolivegames/becsy';
 import { Text } from 'troika-three-text';
+import { generateUUID } from 'three/src/math/MathUtils';
+import localforage from 'localforage';
+
 const NUM_FLAPS_TO_START_GAME = 3;
 const START_ANGULAR_SPEED = Math.PI / 25;
 const RING_INTERVAL = 3;
 const START_RING_SCALE = 5;
+const RECORD_SCORE_KEY = 'record-score';
+const PLAYER_ID_KEY = 'player-id';
+
+const SCORE_BOARD_TEXTURE = new TextureLoader().load('assets/scoreboard.png');
+SCORE_BOARD_TEXTURE.colorSpace = SRGBColorSpace;
 
 export class GameSystem extends System {
 	constructor() {
@@ -33,6 +49,31 @@ export class GameSystem extends System {
 		this._ring = null;
 		this._ringNumber = null;
 		this._ringTimer = RING_INTERVAL;
+		this._scoreBoard = null;
+		this._playerId = null;
+		this._record = null;
+
+		this._currentScore = createText(0);
+		this._recordScore = createText(2);
+		this._worldRecord = createText(0);
+		this._ranking = createText(0);
+		localforage.getItem(RECORD_SCORE_KEY).then((score) => {
+			if (score) {
+				this._recordScore.text = score.toString();
+				this._record = score;
+				this._recordScore.sync();
+			}
+		});
+		localforage.getItem(PLAYER_ID_KEY).then((playerId) => {
+			if (playerId) {
+				this._playerId = playerId;
+				console.log('retrieved player id', playerId);
+			} else {
+				this._playerId = generateUUID();
+				localforage.setItem(PLAYER_ID_KEY, this._playerId);
+			}
+		});
+		// TO-DO: Get ranking and world record from server and update score board
 	}
 
 	execute() {
@@ -40,6 +81,33 @@ export class GameSystem extends System {
 		const player = this.playerEntity.current[0].read(PlayerComponent);
 		const isPresenting = global.renderer.xr.isPresenting;
 		const rotator = player.space.parent;
+
+		if (!this._scoreBoard) {
+			this._scoreBoard = new Mesh(
+				new PlaneGeometry(2, 1),
+				new MeshBasicMaterial({ map: SCORE_BOARD_TEXTURE, transparent: true }),
+			);
+			player.space.add(this._scoreBoard);
+			this._scoreBoard.position.set(0, 1.5, -2);
+
+			this._scoreBoard.add(this._currentScore);
+			this._currentScore.position.x = -0.15;
+			this._currentScore.position.y = -0.22;
+
+			this._scoreBoard.add(this._recordScore);
+			this._recordScore.position.x = -0.15;
+			this._recordScore.position.y = -0.36;
+
+			this._scoreBoard.add(this._ranking);
+			this._ranking.position.x = 0.8;
+			this._ranking.position.y = -0.22;
+
+			this._scoreBoard.add(this._worldRecord);
+			this._worldRecord.position.x = 0.8;
+			this._worldRecord.position.y = -0.36;
+		}
+
+		this._scoreBoard.visible = false;
 
 		if (!this._ring && global.scene.getObjectByName('ring')) {
 			this._ring = global.scene.getObjectByName('ring');
@@ -64,6 +132,7 @@ export class GameSystem extends System {
 
 		if (global.gameState === 'lobby') {
 			if (isPresenting) {
+				this._scoreBoard.visible = true;
 				for (let entry of Object.entries(player.controllers)) {
 					const [handedness, controller] = entry;
 					const thisFrameY = controller.targetRaySpace.position.y;
@@ -129,6 +198,16 @@ export class GameSystem extends System {
 						this._ring.scale.multiplyScalar(0.98);
 						this._ringTimer = RING_INTERVAL;
 					} else {
+						this._currentScore.text = global.score.toString();
+						this._currentScore.sync();
+						if (global.score > this._record) {
+							// TO-DO: Send best score to server
+							console.log('best score updated:', global.score);
+							this._record = global.score;
+							this._recordScore.text = global.score.toString();
+							this._recordScore.sync();
+							localforage.setItem(RECORD_SCORE_KEY, this._record);
+						}
 						global.gameState = 'lobby';
 						global.score = 0;
 						player.space.position.y = 4;
@@ -138,3 +217,14 @@ export class GameSystem extends System {
 		}
 	}
 }
+
+const createText = (defaultValue) => {
+	const text = new Text();
+	text.text = defaultValue.toString();
+	text.fontSize = 0.12;
+	text.anchorX = 'center';
+	text.anchorY = 'middle';
+	text.sync();
+	text.position.z = 0.001;
+	return text;
+};
