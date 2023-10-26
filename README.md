@@ -1,72 +1,62 @@
-# WebXR Samples
+# Flap Frenzy
 
-Welcome to WebXR Samples! This production-ready template app utilizes the new [Reality Accelerator Toolkit](https://github.com/meta-quest/reality-accelerator-toolkit) to demonstrate various Mixed Reality features and is built with [Three.js](https://threejs.org/). It is designed to help you kickstart your own WebXR mixed reality projects with ease. The template app comes with the [Becsy ECS](https://lastolivegames.github.io/becsy/) and several other useful libraries integrated, so you can focus on building your app with the best tools available.
+Welcome to Flap Frenzy, an immersive and interactive WebXR experience built on top of the [WebXR Template App](https://github.com/meta-quest/webxr-samples) where players navigate their character through a series of shrinking target rings. By physically flapping their arms and adopting different poses, players can control their character's movement in the game, offering a dynamic and engaging experience.
 
-> A live demo can be viewed [here](https://meta-quest.github.io/webxr-samples).
+![Alt Text](./src/assets/flapfrenzy.gif)
 
-## Features
+> This experience is developed by [Felix Z](https://twitter.com/felix_trz) and funded by [Meta](https://meta.com/)
+> Assets from [Synty Studio](https://www.syntystudios.com/)'s free [POLYGON - Starter Pack](https://syntystore.com/products/polygon-starter-pack)
 
-- 🚀 Reality Accelerator Toolkit integration
-- 🌐 Built with Three.js
-- 🧩 Becsy Entity Component System (ECS)
-- 📚 Pre-configured with useful libraries
-- 🏗️ Production-ready template
-- 🛠️ Easy customization for your own mixed reality apps
+## Table of Contents
+- [How to Play](#how-to-play)
+- [Getting Started](#getting-started)
+- [File Structure and Guide](#file-structure-and-guide)
+- [Contributing](#contributing)
+- [License](#license)
+
+## How to Play
+- **Arm Flapping**: Flap your arms to make the character ascend in the game.
+- **Glide**: Extend your arms horizontally to glide. This helps the character maintain altitude more easily.
+- **Dive**: Tuck your arms beside your body to dive, causing the character to lose altitude quickly.
+- **Objective**: The main goal is to pass through as many target rings as possible. As you progress, the size of the target rings will shrink, increasing the challenge.
 
 ## Getting Started
+1. Clone the repository:
+   ```
+   git clone https://github.com/felixtrz/flap-frenzy.git
+   ```
+2. Navigate to the project directory:
+   ```
+   cd flap-frenzy
+   ```
+3. Install the required dependencies (if any).
+4. Run the game locally.
 
-Follow these instructions to set up the template app and start building your own mixed reality project.
+## File Structure and Guide
 
-### Prerequisites
+### 1. `index.js`: The entry point of the game.
+- Initializes the game and sets up the necessary configurations.
+- Sets up the game loop which continuously updates and renders the game elements.
 
-Make sure you have the following installed on your system:
+### 2. `game.js`: Contains the main game logic.
+- Manages the overall game state, including starting, pausing, and ending the game.
+- Handles user input, updates game elements, and renders them on the screen.
 
-- Node.js (v16.x or later recommended)
-- npm (v9.x or later recommended)
+### 3. `flap.js`: Defines the behavior of the flapping mechanism.
+- Manages the flapping mechanism of the player's character.
+- Determines the character's ascent when the player interacts and its descent due to gravity.
 
-### Installation
+### 4. `player.js`: Manages the player's character.
+- Responsible for the player's character behavior, including movement and collision detection.
+- Renders the character on the screen.
 
-1. Clone the repository and navigate to the project directory:
+### 5. `scene.js`: Handles the game scenes.
+- Manages the different scenes in the game, such as the background and obstacles.
+- Updates and renders these elements on the screen.
 
-```sh
-$ git clone git@github.com:meta-quest/webxr-samples.git
-$ cd webxr-samples
-```
-
-2. Install the dependencies:
-
-```sh
-$ npm install
-```
-
-3. Run the development server:
-
-```sh
-$ npm run serve
-```
-
-The app will be available at http://localhost:8081/ in your browser. The development server will watch for changes in your source files and automatically reload the app.
-
-### Building for Production
-
-> This project contains GitHub workflow [configuration](https://github.com/meta-quest/webxr-samples/blob/main/.github/workflows/deploy.yml) that automatically builds and deploys the WebXR app to GitHub page.
-
-To manually build the app for production, run the following command:
-
-```sh
-$ npm run build
-```
-
-This will generate a dist folder with the optimized files for deployment.
-
-## Making Changes
-
-To start building your own mixed reality app, you can modify the template app's source code. The following files and folders are the main areas you'll be working with:
-
-- src/: The source code for your app
-- src/index.html: The HTML entry point for your app
-- src/index.js: The JavaScript entry point for your app
-- src/assets/: Any assets (models, textures, etc.) used in your app
+### 6. `landing.js`: Manages the landing page of the game.
+- Handles the game's landing page displayed before the game starts.
+- Contains options like "Start Game", "Settings", and "High Scores".
 
 ## Contributing
 
