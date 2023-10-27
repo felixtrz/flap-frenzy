@@ -29,7 +29,7 @@
 		"gamepad-wrapper": "^1.2.0",
 		"localforage": "^1.10.0",
 		"ratk": "^0.2.0",
-		"three": "^0.149.0",
+		"three": "npm:super-three@0.157.1",
 		"troika-three-text": "^0.48.0"
 	}
 }

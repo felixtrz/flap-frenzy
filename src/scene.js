@@ -10,17 +10,23 @@ import {
 	HemisphereLight,
 	PMREMGenerator,
 	PerspectiveCamera,
+	SRGBColorSpace,
 	Scene,
 	WebGLRenderer,
-	sRGBEncoding,
 } from 'three';
 
+import { Constants } from './global';
 import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
+/**
+ * Sets up the main scene, camera, and renderer for the game.
+ * @returns {Object} An object containing the scene, camera, and renderer.
+ */
 export const setupScene = () => {
 	const scene = new Scene();
 
+	// Set up the main camera
 	const camera = new PerspectiveCamera(
 		70,
 		window.innerWidth / window.innerHeight,
@@ -28,36 +34,42 @@ export const setupScene = () => {
 		5000,
 	);
 
+	// Add hemisphere light for soft ambient lighting
 	scene.add(new HemisphereLight(0x606060, 0x404040));
 
+	// Add directional light for brighter, directional illumination
 	const light = new DirectionalLight(0xffffff);
 	light.position.set(1, 1, 1).normalize();
 	scene.add(light);
 
+	// Set up the WebGL renderer with anti-aliasing
 	const renderer = new WebGLRenderer({ antialias: true });
 	renderer.setPixelRatio(window.devicePixelRatio);
 	renderer.setSize(window.innerWidth, window.innerHeight);
-	renderer.outputEncoding = sRGBEncoding;
+	renderer.outputColorSpace = SRGBColorSpace;
 	renderer.xr.enabled = true;
 	document.body.appendChild(renderer.domElement);
 
+	// Set up the PMREM generator for environment mapping
 	const pmremGenerator = new PMREMGenerator(renderer);
 	pmremGenerator.compileEquirectangularShader();
 
-	new EXRLoader().load('assets/venice_sunset_1k.exr', (texture) => {
+	// Load environment map and set it to the scene
+	new EXRLoader().load(Constants.ENV_TEXTURE_PATH, (texture) => {
 		const envMap = pmremGenerator.fromEquirectangular(texture).texture;
 		pmremGenerator.dispose();
 		scene.environment = envMap;
 	});
 
-	new GLTFLoader().load('assets/flappybird.glb', (gltf) => {
+	// Load and add the main game model to the scene
+	new GLTFLoader().load(Constants.SCENE_MODEL_PATH, (gltf) => {
 		scene.add(gltf.scene);
 	});
 
+	// Adjust camera and renderer settings on window resize
 	window.addEventListener('resize', function () {
 		camera.aspect = window.innerWidth / window.innerHeight;
 		camera.updateProjectionMatrix();
-
 		renderer.setSize(window.innerWidth, window.innerHeight);
 	});
 

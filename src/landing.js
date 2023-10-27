@@ -9,12 +9,10 @@ import { GlobalComponent } from './global';
 import { PlayerComponent } from './player';
 import { System } from '@lastolivegames/becsy';
 import { VRButton } from 'ratk';
-// import { Vector3 } from 'three';
 
-// const CAMERA_START_POSITION = new Vector3(0, 4, 34);
-// const CAMERA_ROATION_AXIS = new Vector3(0, 1, 0);
-// const CAMERA_ROTATION_FREQUENCY = 0.05;
-
+/**
+ * The InlineSystem class manages the VR and Web launch buttons on the landing page.
+ */
 export class InlineSystem extends System {
 	constructor() {
 		super();
@@ -23,10 +21,18 @@ export class InlineSystem extends System {
 		this.needsSetup = true;
 	}
 
+	/**
+	 * Sets up the VR and Web launch buttons.
+	 * @param {Object} global - The global component containing the renderer.
+	 */
 	_setupButtons(global) {
 		const vrButton = document.getElementById('vr-button');
 		const webLaunchButton = document.getElementById('web-launch-button');
+
+		// Initially hide the web launch button
 		webLaunchButton.style.display = 'none';
+
+		// Convert the VR button and handle unsupported VR scenarios
 		VRButton.convertToVRButton(vrButton, global.renderer, {
 			optionalFeatures: ['local-floor', 'bounded-floor', 'layers'],
 			onUnsupported: () => {
@@ -34,6 +40,8 @@ export class InlineSystem extends System {
 				webLaunchButton.style.display = 'block';
 			},
 		});
+
+		// Set the action for the web launch button
 		webLaunchButton.onclick = () => {
 			window.open(
 				'https://www.oculus.com/open_url/?url=' +
@@ -42,29 +50,16 @@ export class InlineSystem extends System {
 		};
 	}
 
+	/**
+	 * Executes the system logic. Sets up the buttons if they haven't been set up yet.
+	 */
 	execute() {
 		const global = this.globalEntity.current[0].read(GlobalComponent);
-		// const playerSpace = this.playerEntity.current[0].read(PlayerComponent)
-		// 	.space;
-
-		// const isPresenting = global.renderer.xr.isPresenting;
-		// if (!isPresenting) {
-		// 	playerSpace.position
-		// 		.copy(CAMERA_START_POSITION)
-		// 		.applyAxisAngle(
-		// 			CAMERA_ROATION_AXIS,
-		// 			this.time * CAMERA_ROTATION_FREQUENCY,
-		// 		);
-		// 	playerSpace.lookAt(new Vector3(0, playerSpace.position.y, 0));
-		// 	playerSpace.rotateY(Math.PI / 2);
-		// }
 
 		if (this.needsSetup) {
 			this._setupButtons(global);
 			this.needsSetup = false;
 			return;
 		}
-
-		// this.wasPresenting = isPresenting;
 	}
 }

@@ -11,8 +11,9 @@ import { System, Type } from '@lastolivegames/becsy';
 import { GamepadWrapper } from 'gamepad-wrapper';
 import { GlobalComponent } from './global';
 
-// import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory';
-
+/**
+ * PlayerComponent represents the player's state and attributes in the game.
+ */
 export class PlayerComponent {}
 
 PlayerComponent.schema = {
@@ -21,6 +22,9 @@ PlayerComponent.schema = {
 	controllers: { type: Type.object },
 };
 
+/**
+ * PlayerSystem manages the player's interactions and updates in the game.
+ */
 export class PlayerSystem extends System {
 	constructor() {
 		super();
@@ -31,6 +35,10 @@ export class PlayerSystem extends System {
 		this._vec3 = new Vector3();
 	}
 
+	/**
+	 * Sets up the player's space, controllers, and head in the game.
+	 * @param {Object} global - The global component containing the renderer, camera, and scene.
+	 */
 	_setup(global) {
 		const { renderer, camera, scene } = global;
 		const controllers = {};
@@ -68,6 +76,9 @@ export class PlayerSystem extends System {
 		scene.add(playerSpace);
 	}
 
+	/**
+	 * Executes the system logic. Sets up the player if not set up yet, and updates the player's state.
+	 */
 	execute() {
 		const global = this.globalEntity.current[0].read(GlobalComponent);
 		if (this.playerEntity.current.length == 0) {
