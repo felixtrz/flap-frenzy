@@ -43,8 +43,8 @@ export const Constants = {
 
 	// asset paths
 	SCORE_BOARD_TEXTURE_PATH: 'assets/scoreboard.png',
-	ENV_TEXTURE_PATH: 'assets/venice_sunset_1k.exr',
-	SCENE_MODEL_PATH: 'assets/flappybird.glb',
+	ENV_TEXTURE_PATH: 'assets/envmap.exr',
+	SCENE_MODEL_PATH: 'assets/island.glb',
 
 	// local storage keys
 	RECORD_SCORE_KEY: 'record-score',
