@@ -39,7 +39,17 @@ module.exports = {
 			template: './src/index.html',
 		}),
 		new CopyPlugin({
-			patterns: [{ from: 'src/assets', to: 'assets' }],
+			patterns: [
+				{ from: 'src/assets', to: 'assets' },
+				{
+					from: 'node_modules/three/examples/jsm/libs/basis',
+					to: 'vendor/basis',
+				},
+				{
+					from: 'node_modules/three/examples/jsm/libs/draco',
+					to: 'vendor/draco',
+				},
+			],
 		}),
 	],
 	devtool: 'source-map',

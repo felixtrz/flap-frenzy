@@ -9,7 +9,6 @@ import { Constants, GlobalComponent } from './global';
 import { Group, Vector3 } from 'three';
 import { PlayerComponent, PlayerSystem } from './player';
 
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { System } from '@lastolivegames/becsy';
 
 /**
@@ -32,7 +31,7 @@ export class FlapSystem extends System {
 	/**
 	 * Sets up the player's space and loads the wing assets.
 	 */
-	_init(playerSpace, scene) {
+	_init(playerSpace, scene, gltfLoader) {
 		this._rotator = new Group();
 		this._rotator.add(playerSpace);
 		playerSpace.scale.setScalar(0.1);
@@ -40,7 +39,7 @@ export class FlapSystem extends System {
 		playerSpace.rotateY(-Math.PI / 2);
 		scene.add(this._rotator);
 
-		new GLTFLoader().load('assets/wing.glb', (gltf) => {
+		gltfLoader.load(Constants.WING_MODEL_PATH, (gltf) => {
 			const rightWing = gltf.scene;
 			const leftWing = rightWing.clone(true);
 			leftWing.scale.set(-1, 1, 1);
@@ -54,7 +53,7 @@ export class FlapSystem extends System {
 		const player = this.playerEntity.current[0].read(PlayerComponent);
 
 		if (!this._rotator) {
-			this._init(player.space, global.scene);
+			this._init(player.space, global.scene, global.gltfLoader);
 		}
 
 		this._rotator.rotateY(Constants.PLAYER_ANGULAR_SPEED * this.delta);

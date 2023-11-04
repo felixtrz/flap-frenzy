@@ -25,6 +25,9 @@ GlobalComponent.schema = {
 	// Reference to the game's main scene
 	scene: { type: Type.object },
 
+	// Shared GLTF Loader
+	gltfLoader: { type: Type.object },
+
 	// Current score of the player
 	score: { type: Type.int16, default: 0 },
 
@@ -44,7 +47,8 @@ export const Constants = {
 	// asset paths
 	SCORE_BOARD_TEXTURE_PATH: 'assets/scoreboard.png',
 	ENV_TEXTURE_PATH: 'assets/envmap.exr',
-	SCENE_MODEL_PATH: 'assets/island.glb',
+	SCENE_MODEL_PATH: 'assets/gltf/scene.gltf',
+	WING_MODEL_PATH: 'assets/gltf/wing.gltf',
 
 	// local storage keys
 	RECORD_SCORE_KEY: 'record-score',

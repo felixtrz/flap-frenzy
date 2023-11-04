@@ -8,6 +8,7 @@
 import {
 	DirectionalLight,
 	HemisphereLight,
+	LoadingManager,
 	PMREMGenerator,
 	PerspectiveCamera,
 	SRGBColorSpace,
@@ -16,8 +17,18 @@ import {
 } from 'three';
 
 import { Constants } from './global';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader';
+
+const LOADING_MANAGER = new LoadingManager();
+const DRACO_LOADER = new DRACOLoader(LOADING_MANAGER).setDecoderPath(
+	`vendor/draco/gltf/`,
+);
+const KTX2_LOADER = new KTX2Loader(LOADING_MANAGER).setTranscoderPath(
+	`vendor/basis/`,
+);
 
 /**
  * Sets up the main scene, camera, and renderer for the game.
@@ -62,7 +73,11 @@ export const setupScene = () => {
 	});
 
 	// Load and add the main game model to the scene
-	new GLTFLoader().load(Constants.SCENE_MODEL_PATH, (gltf) => {
+	const gltfLoader = new GLTFLoader(LOADING_MANAGER)
+		.setCrossOrigin('anonymous')
+		.setDRACOLoader(DRACO_LOADER)
+		.setKTX2Loader(KTX2_LOADER.detectSupport(renderer));
+	gltfLoader.load(Constants.SCENE_MODEL_PATH, (gltf) => {
 		scene.add(gltf.scene);
 	});
 
@@ -73,5 +88,5 @@ export const setupScene = () => {
 		renderer.setSize(window.innerWidth, window.innerHeight);
 	});
 
-	return { scene, camera, renderer };
+	return { scene, camera, renderer, gltfLoader };
 };

@@ -37,10 +37,10 @@ World.create(worldDef).then((world) => {
 	let ecsexecuting = false;
 
 	// Set up the main scene, camera, and renderer
-	const { scene, camera, renderer } = setupScene();
+	const { scene, camera, renderer, gltfLoader } = setupScene();
 
 	// Create a global entity to store references to the renderer, camera, and scene
-	world.createEntity(GlobalComponent, { renderer, camera, scene });
+	world.createEntity(GlobalComponent, { renderer, camera, scene, gltfLoader });
 
 	// Set the animation loop for rendering and game logic
 	renderer.setAnimationLoop(function () {
