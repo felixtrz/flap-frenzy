@@ -10,6 +10,7 @@ Welcome to Flap Frenzy, an immersive and interactive WebXR experience built on t
 
 - [How to Play](#how-to-play)
 - [Getting Started](#getting-started)
+- [Project Architecture Overview](#project-architecture-overview)
 - [Contributing](#contributing)
 - [License](#license)
 
