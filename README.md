@@ -47,6 +47,24 @@ To set up your development environment and start playing Flap Frenzy, follow the
    ```
    The build artifacts will be stored in the `dist/` directory.
 
+## Project Architecture Overview
+
+> For a detailed breakdown of the project's structure and a developer's guide, please see the [Project Structure & Developer Guide](./src/README.md) in the `src` directory.
+
+Flap Frenzy is an example of combining web technologies with game design patterns to create immersive experiences. Below is an outline of the key architectural elements:
+
+### Three.js and WebXR Support
+
+The game's 3D rendering and interactive capabilities are powered by Three.js, with its robust WebXR support enabling immersive VR experiences. This integration allows us to tap into the full potential of virtual reality, providing a seamless and intuitive gameplay experience that is both performant and visually enjoyable.
+
+### Entity-Component-System (ECS) Architecture
+
+Our use of an ECS architecture is exemplified by the `PlayerComponent` and `PlayerSystem`. The `PlayerComponent` holds the state and attributes of the player, while the `PlayerSystem` handles input and updates the player's state. This separation of data and logic facilitates a modular and maintainable codebase, allowing for easy iteration and expansion of game features.
+
+### 3D Asset Workflow
+
+Blender is a powerful 3D modeling software and our tool of choice for creating and editing 3D assets. To optimize these assets for the web, we employ gltf-transform, which compresses meshes and textures with minimal sacrifice in quality. This streamlined workflow is crucial for maintaining high performance and fast load times, essential for the smooth operation of WebXR experiences.
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to the project.
