@@ -11,48 +11,46 @@ import './styles/index.css';
 // Importing game systems and components
 import { PlayerComponent, PlayerSystem } from './player';
 
+import { Clock } from 'three';
 import { FlapSystem } from './flap';
 import { GameSystem } from './game';
 import { GlobalComponent } from './global';
 import { InlineSystem } from './landing';
-import { World } from '@lastolivegames/becsy';
+import { World } from 'elics';
 // Importing scene setup function
 import { setupScene } from './scene';
 
-// Definition for the world, including all systems and components
-const worldDef = {
-	defs: [
-		GlobalComponent,
-		PlayerComponent,
-		PlayerSystem,
-		InlineSystem,
-		FlapSystem,
-		GameSystem,
-	],
-};
-
 // Create the world with the defined systems and components
-World.create(worldDef).then((world) => {
-	// Flag to prevent multiple ECS executions simultaneously
-	let ecsexecuting = false;
+const world = new World();
+world
+	.registerComponent(GlobalComponent)
+	.registerComponent(PlayerComponent)
+	.registerSystem(PlayerSystem)
+	.registerSystem(FlapSystem)
+	.registerSystem(GameSystem)
+	.registerSystem(InlineSystem);
+const clock = new Clock();
 
-	// Set up the main scene, camera, and renderer
-	const { scene, camera, renderer, gltfLoader } = setupScene();
+// Set up the main scene, camera, and renderer
+const { scene, camera, renderer, gltfLoader } = setupScene();
 
-	// Create a global entity to store references to the renderer, camera, and scene
-	world.createEntity(GlobalComponent, { renderer, camera, scene, gltfLoader });
+// Create a global entity to store references to the renderer, camera, and scene
+world.createEntity().addComponent(GlobalComponent, {
+	renderer,
+	camera,
+	scene,
+	gltfLoader,
+	score: 0,
+	gameState: 'lobby',
+});
 
-	// Set the animation loop for rendering and game logic
-	renderer.setAnimationLoop(function () {
-		// Render the scene
-		renderer.render(scene, camera);
+// Set the animation loop for rendering and game logic
+renderer.setAnimationLoop(function () {
+	const delta = clock.getDelta();
+	const time = clock.elapsedTime;
+	// Execute the ECS world logic
+	world.update(delta, time);
 
-		// Execute the ECS world logic if not already executing
-		if (ecsexecuting == false) {
-			ecsexecuting = true;
-			world.execute().then(() => {
-				ecsexecuting = false;
-			});
-		}
-	});
+	// Render the scene
+	renderer.render(scene, camera);
 });

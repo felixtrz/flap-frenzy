@@ -1,21 +1,21 @@
 {
-	"name": "webxr-samples",
+	"name": "flap-frenzy",
 	"private": true,
 	"devDependencies": {
 		"@gltf-transform/cli": "^3.5.0",
 		"@gltf-transform/core": "^3.5.0",
 		"@gltf-transform/extensions": "^3.5.0",
 		"@gltf-transform/functions": "^3.5.0",
-		"draco3dgltf": "^1.5.6",
-		"sharp": "^0.32.4",
 		"copy-webpack-plugin": "^11.0.0",
 		"css-loader": "^5.2.1",
+		"draco3dgltf": "^1.5.6",
 		"eslint": "^7.24.0",
 		"eslint-config-prettier": "^8.2.0",
 		"eslint-webpack-plugin": "^2.5.3",
 		"html-webpack-plugin": "^5.3.1",
 		"pre-commit": "^1.2.2",
 		"prettier": "2.2.1",
+		"sharp": "^0.32.4",
 		"style-loader": "^2.0.0",
 		"webpack": "^5.33.2",
 		"webpack-cli": "^4.6.0",
@@ -32,7 +32,7 @@
 		"lint"
 	],
 	"dependencies": {
-		"@lastolivegames/becsy": "^0.14.3",
+		"elics": "^0.1.2",
 		"gamepad-wrapper": "^1.2.0",
 		"localforage": "^1.10.0",
 		"ratk": "^0.2.0",

@@ -7,19 +7,15 @@
 
 import { Constants, GlobalComponent } from './global';
 import { Group, Vector3 } from 'three';
-import { PlayerComponent, PlayerSystem } from './player';
 
-import { System } from '@lastolivegames/becsy';
+import { PlayerComponent } from './player';
+import { System } from 'elics';
 
 /**
  * FlapSystem class handles the flapping mechanism and related game logic.
  */
 export class FlapSystem extends System {
-	constructor() {
-		super();
-		this.globalEntity = this.query((q) => q.current.with(GlobalComponent));
-		this.playerEntity = this.query((q) => q.current.with(PlayerComponent));
-		this.schedule((s) => s.after(PlayerSystem));
+	init() {
 		this._rotator = null;
 		this._vertSpeed = 0;
 		this._lastFrameY = { left: null, right: null };
@@ -48,27 +44,32 @@ export class FlapSystem extends System {
 		});
 	}
 
-	execute() {
-		const global = this.globalEntity.current[0].read(GlobalComponent);
-		const player = this.playerEntity.current[0].read(PlayerComponent);
+	update(delta) {
+		const global = this.getEntities(this.queries.global)[0].getComponent(
+			GlobalComponent,
+		);
+
+		const player = this.getEntities(this.queries.player)[0]?.getComponent(
+			PlayerComponent,
+		);
 
 		if (!this._rotator) {
 			this._init(player.space, global.scene, global.gltfLoader);
 		}
 
-		this._rotator.rotateY(Constants.PLAYER_ANGULAR_SPEED * this.delta);
+		this._rotator.rotateY(Constants.PLAYER_ANGULAR_SPEED * delta);
 		const isPresenting = global.renderer.xr.isPresenting;
 
 		if (isPresenting) {
-			this._handleVRMode(player, global);
+			this._handleVRMode(player, global, delta);
 		} else {
 			this._handleNonVRMode(player);
 		}
 
-		this._manageRings();
+		this._manageRings(delta);
 	}
 
-	_handleVRMode(player, global) {
+	_handleVRMode(player, global, delta) {
 		let flapSpeed = 0;
 		let wingAngle = 0;
 
@@ -76,7 +77,7 @@ export class FlapSystem extends System {
 			const thisFrameY = controller.targetRaySpace.position.y;
 			if (this._lastFrameY[handedness]) {
 				if (thisFrameY < this._lastFrameY[handedness]) {
-					flapSpeed += (this._lastFrameY[handedness] - thisFrameY) / this.delta;
+					flapSpeed += (this._lastFrameY[handedness] - thisFrameY) / delta;
 				}
 			}
 			this._lastFrameY[handedness] = thisFrameY;
@@ -91,9 +92,8 @@ export class FlapSystem extends System {
 
 		if (global.gameState === 'ingame') {
 			this._vertSpeed +=
-				gravityAdjusted * this.delta +
-				flapSpeed * Constants.FLAP_SPEED_MULTIPLIER;
-			player.space.position.y += this._vertSpeed * this.delta;
+				gravityAdjusted * delta + flapSpeed * Constants.FLAP_SPEED_MULTIPLIER;
+			player.space.position.y += this._vertSpeed * delta;
 
 			if (player.space.position.y <= 0) {
 				player.space.position.y = 0;
@@ -107,9 +107,9 @@ export class FlapSystem extends System {
 		this._vertSpeed = 0;
 	}
 
-	_manageRings() {
+	_manageRings(delta) {
 		if (this._ring) {
-			this._ringTimer -= this.delta;
+			this._ringTimer -= delta;
 			if (this._ringTimer < 0) {
 				this._ringRotator.quaternion.copy(this._rotator.quaternion);
 				this._ringRotator.rotateY(
@@ -148,3 +148,8 @@ export class FlapSystem extends System {
 		return gravityAdjusted;
 	}
 }
+
+FlapSystem.queries = {
+	global: { required: [GlobalComponent] },
+	player: { required: [PlayerComponent] },
+};

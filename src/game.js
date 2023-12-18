@@ -15,9 +15,8 @@ import {
 	TextureLoader,
 } from 'three';
 
-import { FlapSystem } from './flap';
 import { PlayerComponent } from './player';
-import { System } from '@lastolivegames/becsy';
+import { System } from 'elics';
 import { Text } from 'troika-three-text';
 import { generateUUID } from 'three/src/math/MathUtils';
 import localforage from 'localforage';
@@ -31,19 +30,12 @@ SCORE_BOARD_TEXTURE.colorSpace = SRGBColorSpace;
  * GameSystem class handles the main game logic.
  */
 export class GameSystem extends System {
-	constructor() {
-		super();
+	init() {
 		this._initializeProperties();
 		this._loadStoredData();
 	}
 
 	_initializeProperties() {
-		this.globalEntity = this.query(
-			(q) => q.current.with(GlobalComponent).write,
-		);
-		this.playerEntity = this.query((q) => q.current.with(PlayerComponent));
-		this.schedule((s) => s.after(FlapSystem));
-
 		this._flapData = {
 			left: { y: null, distance: 0, flaps: 0 },
 			right: { y: null, distance: 0, flaps: 0 },
@@ -79,12 +71,17 @@ export class GameSystem extends System {
 		});
 	}
 
-	execute() {
-		const global = this.globalEntity.current[0].write(GlobalComponent);
-		const player = this.playerEntity.current[0].read(PlayerComponent);
+	update(delta) {
+		const global = this.getEntities(this.queries.global)[0].getComponent(
+			GlobalComponent,
+		);
+
+		const player = this.getEntities(this.queries.player)[0].getComponent(
+			PlayerComponent,
+		);
 
 		this._setupScoreBoard(player);
-		this._manageGameStates(global, player);
+		this._manageGameStates(global, player, delta);
 	}
 
 	_setupScoreBoard(player) {
@@ -109,7 +106,7 @@ export class GameSystem extends System {
 		text.position.set(x, y, 0.001);
 	}
 
-	_manageGameStates(global, player) {
+	_manageGameStates(global, player, delta) {
 		const isPresenting = global.renderer.xr.isPresenting;
 		const rotator = player.space.parent;
 		this._scoreBoard.visible = false;
@@ -121,7 +118,7 @@ export class GameSystem extends System {
 		if (global.gameState === 'lobby') {
 			this._handleLobbyState(player, rotator, isPresenting, global);
 		} else {
-			this._handleInGameState(player, global, rotator);
+			this._handleInGameState(player, global, rotator, delta);
 		}
 	}
 
@@ -207,9 +204,9 @@ export class GameSystem extends System {
 		this._ringNumber.sync();
 	}
 
-	_handleInGameState(player, global, rotator) {
+	_handleInGameState(player, global, rotator, delta) {
 		if (this._ring) {
-			this._ringTimer -= this.delta;
+			this._ringTimer -= delta;
 			if (this._ringTimer < 0) {
 				const ringRadius = this._ring.scale.x / 2;
 				if (
@@ -251,6 +248,11 @@ export class GameSystem extends System {
 		player.space.position.y = 4;
 	}
 }
+
+GameSystem.queries = {
+	global: { required: [GlobalComponent] },
+	player: { required: [PlayerComponent] },
+};
 
 /**
  * Helper function to create a text mesh with default settings.

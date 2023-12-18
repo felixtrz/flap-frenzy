@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Component, System } from 'elics';
 import { Group, Matrix4, Vector3 } from 'three';
-import { System, Type } from '@lastolivegames/becsy';
 
 import { GamepadWrapper } from 'gamepad-wrapper';
 import { GlobalComponent } from './global';
@@ -14,24 +14,13 @@ import { GlobalComponent } from './global';
 /**
  * PlayerComponent represents the player's state and attributes in the game.
  */
-export class PlayerComponent {}
-
-PlayerComponent.schema = {
-	space: { type: Type.object },
-	head: { type: Type.object },
-	controllers: { type: Type.object },
-};
+export class PlayerComponent extends Component {}
 
 /**
  * PlayerSystem manages the player's interactions and updates in the game.
  */
 export class PlayerSystem extends System {
-	constructor() {
-		super();
-		this.globalEntity = this.query((q) => q.current.with(GlobalComponent));
-		this.playerEntity = this.query(
-			(q) => q.current.with(PlayerComponent).write,
-		);
+	init() {
 		this._vec3 = new Vector3();
 	}
 
@@ -68,7 +57,7 @@ export class PlayerSystem extends System {
 		const playerHead = new Group();
 		playerSpace.add(playerHead);
 
-		this.createEntity(PlayerComponent, {
+		this.world.createEntity().addComponent(PlayerComponent, {
 			space: playerSpace,
 			head: playerHead,
 			controllers: controllers,
@@ -79,12 +68,18 @@ export class PlayerSystem extends System {
 	/**
 	 * Executes the system logic. Sets up the player if not set up yet, and updates the player's state.
 	 */
-	execute() {
-		const global = this.globalEntity.current[0].read(GlobalComponent);
-		if (this.playerEntity.current.length == 0) {
+	update() {
+		const global = this.getEntities(this.queries.global)[0].getComponent(
+			GlobalComponent,
+		);
+
+		const player = this.getEntities(this.queries.player)[0]?.getComponent(
+			PlayerComponent,
+		);
+
+		if (!player) {
 			this._setup(global);
 		} else {
-			const player = this.playerEntity.current[0].read(PlayerComponent);
 			Object.values(player.controllers).forEach((controllerObject) => {
 				if (controllerObject) controllerObject.gamepadWrapper.update();
 			});
@@ -104,3 +99,8 @@ export class PlayerSystem extends System {
 		}
 	}
 }
+
+PlayerSystem.queries = {
+	global: { required: [GlobalComponent] },
+	player: { required: [PlayerComponent] },
+};

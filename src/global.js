@@ -5,35 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { Component } from 'elics';
+
 // Importing necessary types from becsy
-import { Type } from '@lastolivegames/becsy';
 
 /**
  * The GlobalComponent class represents a component that contains
  * global properties and settings used throughout the game.
  */
-export class GlobalComponent {}
-
-// Define the schema for the GlobalComponent
-GlobalComponent.schema = {
-	// Reference to the game's renderer
-	renderer: { type: Type.object },
-
-	// Reference to the game's main camera
-	camera: { type: Type.object },
-
-	// Reference to the game's main scene
-	scene: { type: Type.object },
-
-	// Shared GLTF Loader
-	gltfLoader: { type: Type.object },
-
-	// Current score of the player
-	score: { type: Type.int16, default: 0 },
-
-	// Current state of the game, can be either 'lobby' or 'ingame'
-	gameState: { type: Type.staticString(['lobby', 'ingame']), default: 'lobby' },
-};
+export class GlobalComponent extends Component {}
 
 export const Constants = {
 	// game constants

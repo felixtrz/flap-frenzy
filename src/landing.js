@@ -6,18 +6,14 @@
  */
 
 import { GlobalComponent } from './global';
-import { PlayerComponent } from './player';
-import { System } from '@lastolivegames/becsy';
+import { System } from 'elics';
 import { VRButton } from 'ratk';
 
 /**
  * The InlineSystem class manages the VR and Web launch buttons on the landing page.
  */
 export class InlineSystem extends System {
-	constructor() {
-		super();
-		this.globalEntity = this.query((q) => q.current.with(GlobalComponent));
-		this.playerEntity = this.query((q) => q.current.with(PlayerComponent));
+	init() {
 		this.needsSetup = true;
 	}
 
@@ -53,8 +49,10 @@ export class InlineSystem extends System {
 	/**
 	 * Executes the system logic. Sets up the buttons if they haven't been set up yet.
 	 */
-	execute() {
-		const global = this.globalEntity.current[0].read(GlobalComponent);
+	update() {
+		const global = this.getEntities(this.queries.global)[0].getComponent(
+			GlobalComponent,
+		);
 
 		if (this.needsSetup) {
 			this._setupButtons(global);
@@ -63,3 +61,7 @@ export class InlineSystem extends System {
 		}
 	}
 }
+
+InlineSystem.queries = {
+	global: { required: [GlobalComponent] },
+};
