@@ -5,16 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Constants, GlobalComponent } from './global';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3 } from 'elixr';
 
-import { PlayerComponent } from './player';
-import { System } from 'elics';
+import { Constants } from './global';
+import { GameSystem } from 'elixr';
 
 /**
  * FlapSystem class handles the flapping mechanism and related game logic.
  */
-export class FlapSystem extends System {
+export class FlapSystem extends GameSystem {
 	init() {
 		this._rotator = null;
 		this._vertSpeed = 0;
@@ -27,83 +26,76 @@ export class FlapSystem extends System {
 	/**
 	 * Sets up the player's space and loads the wing assets.
 	 */
-	_init(playerSpace, scene, gltfLoader) {
+	_init() {
 		this._rotator = new Group();
-		this._rotator.add(playerSpace);
-		playerSpace.scale.setScalar(0.1);
-		playerSpace.position.set(0, 4, 34);
-		playerSpace.rotateY(-Math.PI / 2);
-		scene.add(this._rotator);
-
-		gltfLoader.load(Constants.WING_MODEL_PATH, (gltf) => {
-			const rightWing = gltf.scene;
-			const leftWing = rightWing.clone(true);
-			leftWing.scale.set(-1, 1, 1);
-			playerSpace.add(rightWing, leftWing);
-			this._wings = { left: leftWing, right: rightWing };
-		});
+		this._rotator.add(this.player);
+		this.player.scale.setScalar(0.1);
+		this.player.position.set(0, 4, 34);
+		this.player.rotateY(-Math.PI / 2);
+		this.scene.add(this._rotator);
+		const rightWing = this.assetManager.getAsset('wing').scene;
+		const leftWing = rightWing.clone(true);
+		leftWing.scale.set(-1, 1, 1);
+		this.player.add(rightWing, leftWing);
+		this._wings = { left: leftWing, right: rightWing };
+		this.player.controllers.left.model.visible = false;
+		this.player.controllers.right.model.visible = false;
 	}
 
 	update(delta) {
-		const global = this.getEntities(this.queries.global)[0].getComponent(
-			GlobalComponent,
-		);
-
-		const player = this.getEntities(this.queries.player)[0]?.getComponent(
-			PlayerComponent,
-		);
-
 		if (!this._rotator) {
-			this._init(player.space, global.scene, global.gltfLoader);
+			this._init();
 		}
 
 		this._rotator.rotateY(Constants.PLAYER_ANGULAR_SPEED * delta);
-		const isPresenting = global.renderer.xr.isPresenting;
+		const isPresenting = this.renderer.xr.isPresenting;
 
 		if (isPresenting) {
-			this._handleVRMode(player, global, delta);
+			this._handleVRMode(delta);
 		} else {
-			this._handleNonVRMode(player);
+			this._handleNonVRMode();
 		}
 
 		this._manageRings(delta);
 	}
 
-	_handleVRMode(player, global, delta) {
+	_handleVRMode(delta) {
 		let flapSpeed = 0;
 		let wingAngle = 0;
 
-		Object.entries(player.controllers).forEach(([handedness, controller]) => {
-			const thisFrameY = controller.targetRaySpace.position.y;
-			if (this._lastFrameY[handedness]) {
-				if (thisFrameY < this._lastFrameY[handedness]) {
-					flapSpeed += (this._lastFrameY[handedness] - thisFrameY) / delta;
+		Object.entries(this.player.controllers).forEach(
+			([handedness, controller]) => {
+				const thisFrameY = controller.raySpace.position.y;
+				if (this._lastFrameY[handedness]) {
+					if (thisFrameY < this._lastFrameY[handedness]) {
+						flapSpeed += (this._lastFrameY[handedness] - thisFrameY) / delta;
+					}
 				}
-			}
-			this._lastFrameY[handedness] = thisFrameY;
+				this._lastFrameY[handedness] = thisFrameY;
 
-			if (this._wings[handedness]) {
-				this._adjustWingPosition(player, handedness, controller);
-				wingAngle += this._calculateWingAngle(handedness, controller);
-			}
-		});
+				if (this._wings[handedness]) {
+					this._adjustWingPosition(handedness, controller);
+					wingAngle += this._calculateWingAngle(handedness, controller);
+				}
+			},
+		);
 
 		let gravityAdjusted = this._adjustGravityBasedOnWingAngle(wingAngle);
 
-		if (global.gameState === 'ingame') {
+		if (this.globals.get('gameState') === 'ingame') {
 			this._vertSpeed +=
 				gravityAdjusted * delta + flapSpeed * Constants.FLAP_SPEED_MULTIPLIER;
-			player.space.position.y += this._vertSpeed * delta;
+			this.player.position.y += this._vertSpeed * delta;
 
-			if (player.space.position.y <= 0) {
-				player.space.position.y = 0;
+			if (this.player.position.y <= 0) {
+				this.player.position.y = 0;
 				this._vertSpeed = 0;
 			}
 		}
 	}
 
-	_handleNonVRMode(player) {
-		player.space.position.y = 4;
+	_handleNonVRMode() {
+		this.player.position.y = 4;
 		this._vertSpeed = 0;
 	}
 
@@ -122,17 +114,17 @@ export class FlapSystem extends System {
 		}
 	}
 
-	_adjustWingPosition(player, handedness, controller) {
-		this._wings[handedness].position.copy(player.head.position);
+	_adjustWingPosition(handedness, controller) {
+		this._wings[handedness].position.copy(this.player.head.position);
 		this._wings[handedness].position.y -= 0.25;
 		this._wings[handedness].lookAt(
-			controller.targetRaySpace.getWorldPosition(this._vec3),
+			controller.raySpace.getWorldPosition(this._vec3),
 		);
 	}
 
 	_calculateWingAngle(handedness, controller) {
 		this._vec3.subVectors(
-			controller.targetRaySpace.position,
+			controller.raySpace.position,
 			this._wings[handedness].position,
 		);
 		return Math.atan(Math.abs(this._vec3.y) / Math.abs(this._vec3.x));
@@ -148,8 +140,3 @@ export class FlapSystem extends System {
 		return gravityAdjusted;
 	}
 }
-
-FlapSystem.queries = {
-	global: { required: [GlobalComponent] },
-	player: { required: [PlayerComponent] },
-};

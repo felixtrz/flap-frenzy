@@ -5,31 +5,24 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Constants, GlobalComponent } from './global';
 import {
+	GameSystem,
 	Group,
 	Mesh,
 	MeshBasicMaterial,
 	PlaneGeometry,
 	SRGBColorSpace,
-	TextureLoader,
-} from 'three';
+} from 'elixr';
 
-import { PlayerComponent } from './player';
-import { System } from 'elics';
+import { Constants } from './global';
 import { Text } from 'troika-three-text';
 import { generateUUID } from 'three/src/math/MathUtils';
 import localforage from 'localforage';
 
-const SCORE_BOARD_TEXTURE = new TextureLoader().load(
-	Constants.SCORE_BOARD_TEXTURE_PATH,
-);
-SCORE_BOARD_TEXTURE.colorSpace = SRGBColorSpace;
-
 /**
  * GameSystem class handles the main game logic.
  */
-export class GameSystem extends System {
+export class GameLogicSystem extends GameSystem {
 	init() {
 		this._initializeProperties();
 		this._loadStoredData();
@@ -72,25 +65,19 @@ export class GameSystem extends System {
 	}
 
 	update(delta) {
-		const global = this.getEntities(this.queries.global)[0].getComponent(
-			GlobalComponent,
-		);
-
-		const player = this.getEntities(this.queries.player)[0].getComponent(
-			PlayerComponent,
-		);
-
-		this._setupScoreBoard(player);
-		this._manageGameStates(global, player, delta);
+		this._setupScoreBoard();
+		this._manageGameStates(delta);
 	}
 
-	_setupScoreBoard(player) {
+	_setupScoreBoard() {
 		if (!this._scoreBoard) {
+			const scoreBoardTexture = this.assetManager.getAsset('scoreboard');
+			scoreBoardTexture.colorSpace = SRGBColorSpace;
 			this._scoreBoard = new Mesh(
 				new PlaneGeometry(2, 1),
-				new MeshBasicMaterial({ map: SCORE_BOARD_TEXTURE, transparent: true }),
+				new MeshBasicMaterial({ map: scoreBoardTexture, transparent: true }),
 			);
-			player.space.add(this._scoreBoard);
+			this.player.add(this._scoreBoard);
 			this._scoreBoard.position.set(0, 1.5, -2);
 
 			// Add score texts to the scoreboard
@@ -106,24 +93,24 @@ export class GameSystem extends System {
 		text.position.set(x, y, 0.001);
 	}
 
-	_manageGameStates(global, player, delta) {
-		const isPresenting = global.renderer.xr.isPresenting;
-		const rotator = player.space.parent;
+	_manageGameStates(delta) {
+		const isPresenting = this.renderer.xr.isPresenting;
+		const rotator = this.player.parent;
 		this._scoreBoard.visible = false;
 
-		if (!this._ring && global.scene.getObjectByName('ring')) {
-			this._initializeRing(player, global, rotator);
+		if (!this._ring && this.scene.getObjectByName('ring')) {
+			this._initializeRing(rotator);
 		}
 
-		if (global.gameState === 'lobby') {
-			this._handleLobbyState(player, rotator, isPresenting, global);
+		if (this.globals.get('gameState') === 'lobby') {
+			this._handleLobbyState(rotator, isPresenting);
 		} else {
-			this._handleInGameState(player, global, rotator, delta);
+			this._handleInGameState(rotator, delta);
 		}
 	}
 
-	_initializeRing(player, global, rotator) {
-		this._ring = global.scene.getObjectByName('ring');
+	_initializeRing(rotator) {
+		this._ring = this.scene.getObjectByName('ring');
 		this._ringRotator = new Group();
 		this._ringRotator.add(this._ring);
 		this._ring.position.set(0, 4, 34);
@@ -131,7 +118,7 @@ export class GameSystem extends System {
 		this._ringRotator.rotateY(
 			Constants.PLAYER_ANGULAR_SPEED * Constants.RING_INTERVAL,
 		);
-		this._ring.position.y = player.space.position.y;
+		this._ring.position.y = this.player.position.y;
 		this._ring.scale.setScalar(Constants.STARTING_RING_SCALE);
 
 		const ringNumber = new Text();
@@ -144,15 +131,16 @@ export class GameSystem extends System {
 		ringNumber.sync();
 
 		this._ringNumber = ringNumber;
-		global.scene.add(this._ringRotator);
+		this.scene.add(this._ringRotator);
 	}
 
-	_handleLobbyState(player, rotator, isPresenting, global) {
+	_handleLobbyState(rotator, isPresenting) {
 		if (isPresenting) {
 			this._scoreBoard.visible = true;
-			for (let entry of Object.entries(player.controllers)) {
+			for (let entry of Object.entries(this.player.controllers)) {
 				const [handedness, controller] = entry;
-				const thisFrameY = controller.targetRaySpace.position.y;
+				if (handedness === 'none') continue;
+				const thisFrameY = controller.raySpace.position.y;
 				const lastFrameY = this._flapData[handedness].y;
 
 				this._manageFlapData(handedness, thisFrameY, lastFrameY);
@@ -160,7 +148,7 @@ export class GameSystem extends System {
 				if (
 					this._flapData[handedness].flaps >= Constants.NUM_FLAPS_TO_START_GAME
 				) {
-					this._startGame(global, rotator);
+					this._startGame(rotator);
 					break;
 				}
 			}
@@ -186,9 +174,8 @@ export class GameSystem extends System {
 		this._flapData[handedness].y = thisFrameY;
 	}
 
-	_startGame(global, rotator) {
-		global.gameState = 'ingame';
-		this._ringTimer;
+	_startGame(rotator) {
+		this.globals.set('gameState', 'ingame');
 		this._flapData = {
 			left: { y: null, distance: 0, flaps: 0 },
 			right: { y: null, distance: 0, flaps: 0 },
@@ -204,25 +191,26 @@ export class GameSystem extends System {
 		this._ringNumber.sync();
 	}
 
-	_handleInGameState(player, global, rotator, delta) {
+	_handleInGameState(rotator, delta) {
 		if (this._ring) {
 			this._ringTimer -= delta;
 			if (this._ringTimer < 0) {
 				const ringRadius = this._ring.scale.x / 2;
 				if (
-					Math.abs(player.space.position.y - this._ring.position.y) < ringRadius
+					Math.abs(this.player.position.y - this._ring.position.y) < ringRadius
 				) {
-					this._updateScore(global, rotator);
+					this._updateScore(rotator);
 				} else {
-					this._endGame(player, global);
+					this._endGame();
 				}
 			}
 		}
 	}
 
-	_updateScore(global, rotator) {
-		global.score += 1;
-		this._ringNumber.text = (global.score + 1).toString();
+	_updateScore(rotator) {
+		const score = this.globals.get('score') + 1;
+		this.globals.set('score', score);
+		this._ringNumber.text = (score + 1).toString();
 		this._ringNumber.sync();
 		this._ringRotator.quaternion.copy(rotator.quaternion);
 		this._ringRotator.rotateY(
@@ -233,26 +221,21 @@ export class GameSystem extends System {
 		this._ringTimer = Constants.RING_INTERVAL;
 	}
 
-	_endGame(player, global) {
-		this._currentScore.text = global.score.toString();
+	_endGame() {
+		this._currentScore.text = this.globals.get('score').toString();
 		this._currentScore.sync();
-		if (global.score > this._record) {
-			console.log('best score updated:', global.score);
-			this._record = global.score;
-			this._recordScore.text = global.score.toString();
+		const score = this.globals.get('score');
+		if (score > this._record) {
+			this._record = score;
+			this._recordScore.text = score.toString();
 			this._recordScore.sync();
 			localforage.setItem(Constants.RECORD_SCORE_KEY, this._record);
 		}
-		global.gameState = 'lobby';
-		global.score = 0;
-		player.space.position.y = 4;
+		this.globals.set('gameState', 'lobby');
+		this.globals.set('score', 0);
+		this.player.position.y = 4;
 	}
 }
-
-GameSystem.queries = {
-	global: { required: [GlobalComponent] },
-	player: { required: [PlayerComponent] },
-};
 
 /**
  * Helper function to create a text mesh with default settings.

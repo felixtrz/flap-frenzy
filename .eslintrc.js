@@ -25,4 +25,5 @@ module.exports = {
 		],
 		'lines-between-class-members': ['warn', 'always'],
 	},
+	plugins: ['html'],
 };
