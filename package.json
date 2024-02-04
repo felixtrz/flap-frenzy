@@ -33,7 +33,7 @@
 		"lint"
 	],
 	"dependencies": {
-		"elixr": "file:../elixr/elixr-0.5.10.tgz",
+		"elixr": "0.6.0",
 		"gamepad-wrapper": "^1.2.0",
 		"localforage": "^1.10.0",
 		"troika-three-text": "^0.49.0"
